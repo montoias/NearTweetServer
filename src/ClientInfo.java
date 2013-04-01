@@ -7,6 +7,7 @@ public class ClientInfo {
 	Socket socket;	
 	ObjectInputStream ois;
 	ObjectOutputStream oos;
+	String userName;
 
 
 	public ClientInfo(ObjectInputStream _ois, ObjectOutputStream _oos, Socket _socket) {
@@ -37,6 +38,14 @@ public class ClientInfo {
 
 	public void setOos(ObjectOutputStream oos) {
 		this.oos = oos;
+	}
+
+	public String getUserName() {
+		return userName;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 	
