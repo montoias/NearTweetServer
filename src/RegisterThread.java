@@ -6,8 +6,6 @@ import java.net.Socket;
 import dto.ResponseDto;
 import dto.UserNameDto;
 
-
-
 public class RegisterThread extends Thread {
 
 	public void run() {
@@ -17,17 +15,17 @@ public class RegisterThread extends Thread {
 
 		while (true) {
 			try {
-				clientSocket = ServerApplication.serverSocket.accept(); 
-				System.out.println("Client Wants to register!");
-							
+				clientSocket = ServerApplication.serverSocket.accept();
+				System.out.println("Client Wants to register! " + clientSocket.getInetAddress().getHostAddress() );
+
 				ObjectInputStream ois = new ObjectInputStream(clientSocket.getInputStream());
 				UserNameDto user = (UserNameDto) ois.readObject();
 				userId = user.getInput();
-				
+
 				ObjectOutputStream oos = new ObjectOutputStream(clientSocket.getOutputStream());
 				ResponseDto respDto = new ResponseDto();
 
-				if(ServerApplication.clients.containsKey(userId)){
+				if (ServerApplication.clients.containsKey(userId)) {
 					respDto.setResponse("NOK");
 					System.out.println("NOK");
 					oos.writeObject(respDto);
@@ -40,18 +38,15 @@ public class RegisterThread extends Thread {
 					oos.flush();
 				}
 
-				
 				System.out.println("Added to the clients list: " + userId);
-				ServerApplication.clients.put(userId, new ClientInfo(ois, oos, clientSocket));
-			
+				ServerApplication.clients.put(userId, new ClientInfo(ois, oos,
+						clientSocket));
+
 				new ClientTweetThread(userId).start();
-				
-			//	inputStreamReader.close();
-			//	clientSocket.close();
 
 			} catch (IOException ex) {
 				System.out.println("Problem in message reading");
-			} catch (RuntimeException e){
+			} catch (RuntimeException e) {
 				System.out.println(e.getMessage());
 			} catch (ClassNotFoundException e) {
 				// TODO Auto-generated catch block

@@ -27,15 +27,20 @@ public class ClientTweetThread extends Thread {
 		try {
 			while (true) {
 				tweet = (TweetDto) ois.readObject();
-				tweet.setTweetId(ServerApplication.incrementCount());
-				System.out.println(tweet.getTweet() + "" + tweet.getTweetId());
+				int id = ServerApplication.incrementCount();
+				tweet.setTweetId(id);
+				if(tweet.getConversationID() == -1)
+					tweet.setConversationID(id);
+				
+				System.out.println("@" + tweet.getSender() + " " 
+								+ tweet.getTweet() + " id:" + tweet.getTweetId() 
+								+ "conversation id:" + tweet.getConversationID());
 
 				// TODO Review
 				for (ClientInfo ci : ServerApplication.clients.values()) {
 					ci.getOos().writeObject(tweet);
 					ci.getOos().flush();
 				}
-
 			}
 		} catch (IOException e) {
 
@@ -43,6 +48,9 @@ public class ClientTweetThread extends Thread {
 			
 			try {
 				socket.close();
+				ois.close();
+				oos.close();
+				ServerApplication.clients.remove(userId);
 			} catch (IOException e1) {
 				// TODO Auto-generated catch block
 				e1.printStackTrace();
