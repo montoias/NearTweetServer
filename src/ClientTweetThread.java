@@ -33,21 +33,31 @@ public class ClientTweetThread extends Thread {
 				if (tweet.getConversationID() == -1)
 					tweet.setConversationID(id);
 
-				System.out.println("@" + tweet.getSender() + " "
-						+ tweet.getTweet() + " id:" + tweet.getTweetId()
-						+ "conversation id:" + tweet.getConversationID());
+				String[] splitedTweet = tweet.getTweet().split(" ");
 
-				for (String receiver : ServerApplication.clients.keySet()) {
-					if (tweet.getTweet().contains("@" + receiver)) {
-						ClientInfo ci = ServerApplication.clients.get(receiver);
-						ci.getOos().writeObject(tweet);
-						ci.getOos().flush();
-						tweet.setReceiver(receiver);
-						System.out.println("To: " + receiver);
+				for (String eachSplit : splitedTweet) {
+					if (eachSplit.contains("@")) {
+						tweet.getReceivingEntities().add(eachSplit);
 					}
 				}
 
-				if (tweet.getReceiver() == null) {
+				System.out.println(tweet.getReceivingEntities().toString() + " "
+						+ tweet.getTweet() + " id:" + tweet.getTweetId()
+						+ "conversation id:" + tweet.getConversationID());
+
+				boolean anyEntityIsValid = false;
+				for (String eachReceiver : tweet.getReceivingEntities()) {
+					String user = eachReceiver.replace("@", "");
+					if (ServerApplication.clients.containsKey(user)) {
+						ClientInfo ci = ServerApplication.clients.get(user);
+						ci.getOos().writeObject(tweet);
+						ci.getOos().flush();
+						System.out.println("To: " + user);
+						anyEntityIsValid = true;
+					}
+				}
+
+				if (!anyEntityIsValid) {
 					System.out.println("BroadCast");
 					for (ClientInfo ci : ServerApplication.clients.values()) {
 						ci.getOos().writeObject(tweet);
@@ -55,23 +65,32 @@ public class ClientTweetThread extends Thread {
 					}
 				}
 				
+				// Send to the sender
+				if(ServerApplication.clients.containsKey(tweet.getSender()) && anyEntityIsValid){
+					ClientInfo ci = ServerApplication.clients.get(tweet.getSender());
+					ci.getOos().writeObject(tweet);
+					System.out.println("To: " + tweet.getSender());
+					ci.getOos().flush();
+					
+				}
 			}
 		} catch (IOException e) {
-
-			try {
-				socket.close();
-				ois.close();
-				oos.close();
-				ServerApplication.clients.remove(userId);
-				System.out.println("Fechei a socket");
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			// Do Nothing
 
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+		
+		try {
+			socket.close();
+			ois.close();
+			oos.close();
+			ServerApplication.clients.remove(userId);
+			System.out.println("Fechei a socket");
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
 		}
 	}
 
