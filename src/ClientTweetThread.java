@@ -27,13 +27,12 @@ public class ClientTweetThread extends Thread {
 		try {
 			while (true) {
 				tweet = (TweetDto) ois.readObject();
-				int id = ServerApplication.incrementCount();
-				tweet.setTweetId(id);
+				String id = tweet.getTweetId();
+				String[] splitedTweet = tweet.getTweet().split(" ");
 				
-				if (tweet.getConversationID() == -1)
+				if (tweet.getConversationID().equalsIgnoreCase("-1"))
 					tweet.setConversationID(id);
 
-				String[] splitedTweet = tweet.getTweet().split(" ");
 
 				for (String eachSplit : splitedTweet) {
 					if (eachSplit.contains("@")) {
@@ -45,17 +44,7 @@ public class ClientTweetThread extends Thread {
 						+ tweet.getTweet() + " id:" + tweet.getTweetId()
 						+ "conversation id:" + tweet.getConversationID());
 
-				boolean anyEntityIsValid = false;
-				for (String eachReceiver : tweet.getReceivingEntities()) {
-					String user = eachReceiver.replace("@", "");
-					if (ServerApplication.clients.containsKey(user)) {
-						ClientInfo ci = ServerApplication.clients.get(user);
-						ci.getOos().writeObject(tweet);
-						ci.getOos().flush();
-						System.out.println("To: " + user);
-						anyEntityIsValid = true;
-					}
-				}
+				boolean anyEntityIsValid =	tweetDestiny(tweet);
 
 				if (!anyEntityIsValid) {
 					System.out.println("BroadCast");
@@ -66,7 +55,7 @@ public class ClientTweetThread extends Thread {
 				}
 				
 				// Send to the sender
-				if(ServerApplication.clients.containsKey(tweet.getSender()) && anyEntityIsValid){
+				if(tweet.getReceivingEntities().contains(tweet.getSender()) && anyEntityIsValid){
 					ClientInfo ci = ServerApplication.clients.get(tweet.getSender());
 					ci.getOos().writeObject(tweet);
 					System.out.println("To: " + tweet.getSender());
@@ -92,6 +81,21 @@ public class ClientTweetThread extends Thread {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+	}
+
+	private boolean tweetDestiny(TweetDto tweet) throws IOException {
+		boolean anyEntityIsValid = false;
+		for (String eachReceiver : tweet.getReceivingEntities()) {
+			String user = eachReceiver.replace("@", "");
+			if (ServerApplication.clients.containsKey(user)) {
+				ClientInfo ci = ServerApplication.clients.get(user);
+				ci.getOos().writeObject(tweet);
+				ci.getOos().flush();
+				System.out.println("To: " + user);
+				anyEntityIsValid = true;
+			}
+		}
+		return anyEntityIsValid;
 	}
 
 }
