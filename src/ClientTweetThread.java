@@ -28,49 +28,48 @@ public class ClientTweetThread extends Thread {
 			while (true) {
 				tweet = (TweetDto) ois.readObject();
 				String id = tweet.getTweetId();
-				String[] splitedTweet = tweet.getTweet().split(" ");
-				
+				boolean privacy = tweet.getPrivacy();
+
 				if (tweet.getConversationID().equalsIgnoreCase("-1"))
 					tweet.setConversationID(id);
 
+				if (privacy) {
 
-				for (String eachSplit : splitedTweet) {
-					if (eachSplit.contains("@")) {
-						tweet.getReceivingEntities().add(eachSplit);
-					}
-				}
+					System.out.println(tweet.getReceivingEntities().toString()
+							+ " " + tweet.getTweet() + " id:"
+							+ tweet.getTweetId() + "conversation id:"
+							+ tweet.getConversationID());
+					
+					boolean anyEntityIsValid = tweetDestiny(tweet);
+					if (!anyEntityIsValid)
+						System.out.println("there is NO valid entitys");
+					else
+						System.out.println("there IS valid entitys");
 
-				System.out.println(tweet.getReceivingEntities().toString() + " "
-						+ tweet.getTweet() + " id:" + tweet.getTweetId()
-						+ "conversation id:" + tweet.getConversationID());
-
-				boolean anyEntityIsValid =	tweetDestiny(tweet);
-
-				if (!anyEntityIsValid) {
-					System.out.println("BroadCast");
+				} else {
 					for (ClientInfo ci : ServerApplication.clients.values()) {
 						ci.getOos().writeObject(tweet);
 						ci.getOos().flush();
 					}
-				}
-				
-				// Send to the sender
-				if(tweet.getReceivingEntities().contains(tweet.getSender()) && anyEntityIsValid){
-					ClientInfo ci = ServerApplication.clients.get(tweet.getSender());
-					ci.getOos().writeObject(tweet);
-					System.out.println("To: " + tweet.getSender());
-					ci.getOos().flush();
 					
+					System.out.println("Broadcast" + tweet.getTweet() + " id:"
+							+ tweet.getTweetId() + "conversation id:"
+							+ tweet.getConversationID());
+
 				}
+
 			}
 		} catch (IOException e) {
-			// Do Nothing
-
+			closeConnection();	
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
+			
+	}
+
+	private void closeConnection() {
 		try {
 			socket.close();
 			ois.close();
@@ -78,9 +77,9 @@ public class ClientTweetThread extends Thread {
 			ServerApplication.clients.remove(userId);
 			System.out.println("Fechei a socket");
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
+		
 	}
 
 	private boolean tweetDestiny(TweetDto tweet) throws IOException {
