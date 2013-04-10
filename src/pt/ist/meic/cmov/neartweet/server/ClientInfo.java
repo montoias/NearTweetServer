@@ -1,3 +1,4 @@
+package pt.ist.meic.cmov.neartweet.server;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;

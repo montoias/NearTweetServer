@@ -1,10 +1,12 @@
+package pt.ist.meic.cmov.neartweet.server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import dto.ResponseDto;
-import dto.UserNameDto;
+import pt.ist.meic.cmov.neartweet.dto.ResponseDto;
+import pt.ist.meic.cmov.neartweet.dto.UserNameDto;
+
 
 public class RegisterThread extends Thread {
 

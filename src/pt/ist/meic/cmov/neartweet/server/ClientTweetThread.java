@@ -1,9 +1,11 @@
+package pt.ist.meic.cmov.neartweet.server;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import dto.TweetDto;
+import pt.ist.meic.cmov.neartweet.dto.TweetDto;
+
 
 public class ClientTweetThread extends Thread {
 	String userId;
